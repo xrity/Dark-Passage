@@ -1,7 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://br5o82sudqs5k"]
+[gd_scene load_steps=10 format=3 uid="uid://br5o82sudqs5k"]
 
 [ext_resource type="Script" uid="uid://bqqwds732uyc3" path="res://player/player.gd" id="1_rkbax"]
 [ext_resource type="Texture2D" uid="uid://c2je7d8j1vy8k" path="res://player/player.png" id="2_g1dw6"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rkbax"]
+size = Vector2(22, 30)
 
 [sub_resource type="Animation" id="Animation_ebec5"]
 length = 0.001
@@ -1203,6 +1206,8 @@ hframes = 8
 vframes = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-1, -5)
+shape = SubResource("RectangleShape2D_rkbax")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
