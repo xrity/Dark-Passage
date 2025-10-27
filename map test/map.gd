@@ -10,7 +10,7 @@ const STRUCTS = [
 ]
 
 @export var tile_scenes: Array[PackedScene] = [
-	preload("res://map test/tile/tile0.tscn"),
+	preload("res://map test/tile/tile.tscn"),
 	preload("res://map test/tile/tile1.tscn"),
 	preload("res://map test/tile/tile2.tscn"),
 	preload("res://map test/tile/tile3.tscn"),
