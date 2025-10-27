@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://cyonuljuechc5"]
+
+[ext_resource type="Texture2D" uid="uid://p17ag7jlytjm" path="res://map test/1.png" id="1_rgul8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rgul8"]
+size = Vector2(8.000002, 6.3329935e-08)
+
+[node name="tile" type="Sprite2D"]
+texture_filter = 1
+position = Vector2(0, -5.9604645e-08)
+scale = Vector2(10, 10)
+texture = ExtResource("1_rgul8")
+hframes = 17
+frame = 9
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(1.9073484e-07, -0.99999976)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_rgul8")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0, 0.99999994)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_rgul8")

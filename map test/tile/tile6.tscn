@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://labfjn70oqtn"]
+
+[ext_resource type="Texture2D" uid="uid://p17ag7jlytjm" path="res://map test/1.png" id="1_vxmcc"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vxmcc"]
+size = Vector2(0, 8.000001)
+
+[node name="tile" type="Sprite2D"]
+texture_filter = 1
+scale = Vector2(10, 10)
+texture = ExtResource("1_vxmcc")
+hframes = 17
+frame = 6
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(-0.9999998, 0)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_vxmcc")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0.99999976, -1.9073484e-07)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_vxmcc")

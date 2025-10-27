@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3 uid="uid://csugldy0evsbe"]
+
+[ext_resource type="Texture2D" uid="uid://p17ag7jlytjm" path="res://map test/1.png" id="1_t11cj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_t11cj"]
+size = Vector2(8.000001, 2.3841858e-07)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1ra5h"]
+size = Vector2(2.3841858e-07, 8.000001)
+
+[node name="tile" type="Sprite2D"]
+texture_filter = 1
+scale = Vector2(10, 10)
+texture = ExtResource("1_t11cj")
+hframes = 17
+frame = 16
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0, -3.9999993)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_t11cj")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0, 3.999999)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_t11cj")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(-3.9999993, 0)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_1ra5h")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(3.9999998, 0)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("RectangleShape2D_1ra5h")
