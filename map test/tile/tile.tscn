@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://giyk7aq2y2qg"]
+
+[ext_resource type="PackedScene" uid="uid://csugldy0evsbe" path="res://map test/tile/tile16.tscn" id="1_m3ba3"]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="tile" parent="." instance=ExtResource("1_m3ba3")]
+frame = 0
