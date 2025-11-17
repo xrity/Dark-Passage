@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://gvolnhlu6fsa"]
+
+[ext_resource type="Script" uid="uid://k1t22j2wqh6x" path="res://scenes/wires_game.gd" id="1_d27w7"]
+[ext_resource type="PackedScene" uid="uid://jdy24qy5tvqf" path="res://scenes/wire_tile_sprite.tscn" id="2_d27w7"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_4up7c"]
+
+[node name="wiresGame" type="Node2D"]
+script = ExtResource("1_d27w7")
+
+[node name="wiresFieldSprite" type="Sprite2D" parent="."]
+top_level = true
+position = Vector2(144.00002, 81)
+scale = Vector2(864, 486)
+texture = SubResource("CanvasTexture_4up7c")
+offset = Vector2(0.5, 0.5)
+
+[node name="wireTileSprite" parent="." instance=ExtResource("2_d27w7")]
+visible = false
+position = Vector2(144, 81)
