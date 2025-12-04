@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://jdy24qy5tvqf"]
-
-[ext_resource type="Texture2D" uid="uid://ccs156revrtil" path="res://assets/wires/tile.png" id="1_rxpb7"]
-
-[node name="wireTileSprite" type="Sprite2D"]
-top_level = true
-scale = Vector2(2, 2)
-texture = ExtResource("1_rxpb7")
-offset = Vector2(25.5, 24)

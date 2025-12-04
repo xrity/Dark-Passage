@@ -15,6 +15,24 @@ run/main_scene="uid://dxd3gg8gsguki"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+DiscordRPCLoader="*res://addons/discord-rpc-gd/nodes/discord_autoload.gd"
+
+[dotnet]
+
+project/assembly_name="Dark Passage"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/discord-rpc-gd/plugin.cfg")
+
+[importer_defaults]
+
+animation_library={
+&"animation/fps": 30.0
+}
+
 [input]
 
 ui_up={

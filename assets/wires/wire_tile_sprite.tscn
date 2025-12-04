@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://jdy24qy5tvqf"]
+
+[ext_resource type="Texture2D" uid="uid://dprettaggaa58" path="res://assets/wires/tile.png" id="1_rxpb7"]
+[ext_resource type="Script" uid="uid://cr6qfircy0mhe" path="res://assets/wires/wire_tile_sprite.gd" id="2_wbdsb"]
+[ext_resource type="Texture2D" uid="uid://cjw0bpypt1h08" path="res://assets/wires/color_circle.png" id="3_5yhl6"]
+
+[node name="wireTileSprite" type="Sprite2D"]
+top_level = true
+texture_filter = 1
+texture_repeat = 1
+scale = Vector2(2, 2)
+texture = ExtResource("1_rxpb7")
+offset = Vector2(24, 24)
+script = ExtResource("2_wbdsb")
+metadata/Color = Color(0, 0, 0, 1)
+metadata/Id = 0.0
+
+[node name="color_circle" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(23.999998, 24)
+scale = Vector2(0.9583333, 0.9791667)
+texture = ExtResource("3_5yhl6")
