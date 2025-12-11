@@ -17,6 +17,7 @@ metadata/Id = 0.0
 
 [node name="color_circle" type="Sprite2D" parent="."]
 texture_filter = 1
-position = Vector2(23.999998, 24)
+position = Vector2(5.9604645e-08, 0)
 scale = Vector2(0.9583333, 0.9791667)
 texture = ExtResource("3_5yhl6")
+offset = Vector2(25.043478, 24.510637)

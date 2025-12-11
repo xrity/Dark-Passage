@@ -1,41 +1,32 @@
 extends Node2D
 
-# --- Переменные для узлов (@onready) ---
-@onready var field = $wiresFieldSprite2
+@onready var field = $wiresFieldSprite
 @onready var tile = $wireTileSprite
 @onready var grid_container = Node2D.new()
 
-# --- Настройки сетки и игрового процесса ---
 const MAX_PAIRS = 15
 const MIN_PAIRS = 3
 const MAX_DIFFICULTY = 3.0
-var _current_grid: Array[Array] = [] # Финальная сетка для игрока (только Endpoints)
+var _current_grid: Array[Array] = []
 var _current_colors: Dictionary = {}
 
-# --- Переменные для прокладки пути пользователя ---
 var is_drawing = false
 var current_path_id = 0
 var current_path_color: Color
 var current_path_tiles: Array[Vector2i] = []
 var grid_size = Vector2i.ZERO
 
-# --- Инициализация ---
 func _ready() -> void:
 	add_child(grid_container)
 	grid_container.name = "WireGrid"
-	build_field(4.0)
+	build_field(1)
 	tile.visible = false
 
-# ------------------------------------------------------------------------------
-## 🚀 Генерация Поля (Оставлено без изменений, чтобы не дублировать код)
-# ------------------------------------------------------------------------------
-
 func build_field(difficulty: float) -> void:
-	for child in grid_container.get_children():
-		child.queue_free()
+	assert (grid_container.get_child_count() == 0)
 
 	var actual_difficulty = clampf(difficulty, 1.0, MAX_DIFFICULTY)
-	var new_tile_scale = Vector2(1.0 / actual_difficulty, 1.0 / actual_difficulty)
+	var new_tile_scale = Vector2(tile.scale.x / actual_difficulty, tile.scale.y / actual_difficulty)
 	tile.scale = new_tile_scale
 	
 	var tile_W = tile.texture.get_size().x * tile.scale.x
@@ -49,8 +40,8 @@ func build_field(difficulty: float) -> void:
 
 	var max_possible_pairs = floor(total_tiles / 3.0)
 	var max_pairs_limit = min(MAX_PAIRS, max_possible_pairs)
-	var pair_count = randi_range(MIN_PAIRS, max_pairs_limit)
-	pair_count = max(MIN_PAIRS, pair_count)
+	var rng = RandomNumberGenerator.new()
+	var pair_count: int = rng.randi_range(MIN_PAIRS, max_pairs_limit)
 	
 	var result = generate_field(cols, rows, pair_count)
 	
@@ -71,16 +62,14 @@ func find_empty_position(cols: int, rows: int, occupied_list: Array[Vector2i]) -
 			return pos
 		attempts += 1
 		if attempts > 1000:
-			push_error("Не удалось найти пустую позицию!")
+			push_error("cant find empty position")
 			return Vector2i.ZERO
 			
 	return pos
 
 func generate_field(cols: int, rows: int, pair_count: int) -> Dictionary:
 	var grid: Array[Array] = []
-	var occupied_for_path_gen: Array[Array] = [] # Сетка занятости для AStar
-
-	# Инициализация сеток
+	var occupied_for_path_gen: Array[Array] = []
 	for x in range(cols):
 		grid.append([])
 		occupied_for_path_gen.append([])
@@ -102,7 +91,6 @@ func generate_field(cols: int, rows: int, pair_count: int) -> Dictionary:
 		var start_pos: Vector2i
 		var end_pos: Vector2i
 		
-		# 1. Находим конечные точки
 		start_pos = find_empty_position(cols, rows, all_occupied_endpoints)
 		
 		var attempts = 0
@@ -115,19 +103,16 @@ func generate_field(cols: int, rows: int, pair_count: int) -> Dictionary:
 			
 			attempts += 1
 			if attempts > 1000:
-				push_error("Не удалось найти конечную точку для пары %d" % i)
+				push_error("cant find end point for pair %d" % i)
 				break
 		
 		if attempts > 1000: continue
 
-		# 2. Генерируем путь, используя текущую сетку занятости
 		var path = build_path(start_pos, end_pos, grid_size, occupied_for_path_gen)
 		
 		if path.is_empty() and start_pos != end_pos:
-			push_warning("AStar не смог найти путь для пары %d. Пропуск." % i)
-			continue # Пропускаем эту пару, если путь не найден
-			
-		# 3. Резервируем Endpoints и путь в сетке занятости
+			push_warning("AStar cant find path for pair %d. Skipping." % i)
+			continue
 		all_occupied_endpoints.append(start_pos)
 		all_occupied_endpoints.append(end_pos)
 		
@@ -140,7 +125,6 @@ func generate_field(cols: int, rows: int, pair_count: int) -> Dictionary:
 		occupied_for_path_gen[start_pos.x][start_pos.y] = true
 		occupied_for_path_gen[end_pos.x][end_pos.y] = true
 
-		# 4. Отмечаем ТОЛЬКО стартовую и конечную точки в финальной сетке для игрока
 		grid[start_pos.x][start_pos.y] = i
 		grid[end_pos.x][end_pos.y] = i
 		
@@ -160,7 +144,6 @@ func build_path(start: Vector2i, end: Vector2i, size: Vector2i, occupied_map: Ar
 	
 	astar.update()
 
-	# Задаем непроходимые клетки
 	for x in range(size.x):
 		for y in range(size.y):
 			if occupied_map[x][y]:
@@ -168,12 +151,10 @@ func build_path(start: Vector2i, end: Vector2i, size: Vector2i, occupied_map: Ar
 			else:
 				astar.set_point_solid(Vector2i(x, y), false)
 				
-	# Убедимся, что Endpoints текущего пути всегда проходимы
 	astar.set_point_solid(start, false)
 	astar.set_point_solid(end, false)
 
 
-	# Находим путь
 	var path_array = astar.get_id_path(start, end)
 	
 	var path: Array[Vector2i] = []
@@ -181,14 +162,10 @@ func build_path(start: Vector2i, end: Vector2i, size: Vector2i, occupied_map: Ar
 		path.append(point)
 
 	if path.size() >= 2:
-		path.pop_back() # Удаляем конец
-		path.remove_at(0) # Удаляем старт
+		path.pop_back()
+		path.remove_at(0)
 		
 	return path
-
-# ------------------------------------------------------------------------------
-## 🖼️ Размещение Плиток и Анимация
-# ------------------------------------------------------------------------------
 
 func place_tiles(grid: Array, colors: Dictionary, endpoints: Array) -> void:
 	var cols = grid.size()
@@ -206,12 +183,11 @@ func place_tiles(grid: Array, colors: Dictionary, endpoints: Array) -> void:
 			var grid_pos = Vector2i(x, y)
 			var t = tile.duplicate() as Sprite2D
 			t.visible = true
-			t.position = field.position + Vector2(x * tile_w + tile_w / 2, y * tile_h + tile_h / 2)
+			t.position = field.position + Vector2(x * ((tile_w + tile_w) / 2), y * ((tile_h + tile_h) / 2))
 			
 			t.set_meta(&"Id", id)
 			t.set_meta(&"GridPos", grid_pos)
-			
-			t.modulate = Color(1, 1, 1, 0)
+		
 			
 			var visual_node = t.get_child(0) as Sprite2D
 			
@@ -240,14 +216,6 @@ func _animate_tile_draw(node: CanvasItem, appear: bool) -> void:
 	var duration = 0.2
 	
 	tween.tween_property(node, "modulate:a", final_alpha, duration)
-	
-	if not appear:
-		# Используем bind для Godot 4
-		tween.chain().call_deferred_callable(node.set_visible.bind(false))
-
-# ------------------------------------------------------------------------------
-## ✍️ Обработка Ввода Пользователя (Здесь основные изменения)
-# ------------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -263,10 +231,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				start_drawing_path(grid_pos)
 			else:
 				stop_drawing_path(grid_pos)
-				
-	# 🛑 ИСПРАВЛЕНИЕ 1: Добавлена интерполяция для плавного рисования
-	elif event is InputEventMouseMotion and is_drawing:
-		var current_grid_pos = screen_to_grid(event.position)
 	
 	if current_path_tiles.is_empty(): 
 		return
@@ -278,10 +242,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if current_grid_pos == last_pos:
 		return
 
-	# --- Преобразование в Vector2 для использования метода lerp ---
 	var last_pos_f = Vector2(last_pos) 
 	var current_grid_pos_f = Vector2(current_grid_pos)
-	# ------------------------------------------------------------
 
 	var dx = abs(current_grid_pos.x - last_pos.x)
 	var dy = abs(current_grid_pos.y - last_pos.y)
@@ -291,10 +253,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		for i in range(1, steps + 1):
 			var t = float(i) / steps
 			
-			# Теперь используем Vector2.lerp
 			var interp_pos_float = last_pos_f.lerp(current_grid_pos_f, t) 
 			
-			# Округляем и преобразуем обратно в Vector2i
 			var step_pos = Vector2i(round(interp_pos_float.x), round(interp_pos_float.y))
 			
 			if step_pos != current_path_tiles.back():
@@ -339,13 +299,11 @@ func clear_path(id_to_clear: int) -> void:
 			if _current_grid[x][y] == id_to_clear:
 				var tile_node = get_tile_at(grid_pos)
 				
-				# 🛑 Проверка: Убедимся, что узел существует
 				if tile_node:
 					var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
 					
 					if not is_endpoint:
 						_current_grid[x][y] = 0
-						tile_node.modulate = Color.WHITE
 						tile_node.get_child(0).visible = false
 						_animate_tile_draw(tile_node, false)
 
@@ -365,8 +323,6 @@ func start_drawing_path(pos: Vector2i) -> void:
 		current_path_id = id
 		current_path_color = tile_node.get_meta(&"Color")
 		current_path_tiles.append(pos)
-		
-		tile_node.modulate = Color.WHITE * 0.5 
 
 func draw_path(pos: Vector2i) -> void:
 	if not is_drawing:
@@ -380,7 +336,6 @@ func draw_path(pos: Vector2i) -> void:
 	if pos == last_pos: 
 		return
 	
-	# Оставляем эту проверку, чтобы отсечь прыжки, которые не удалось интерполировать
 	if pos.distance_to(last_pos) > 1.0: 
 		return
 		
@@ -391,10 +346,9 @@ func draw_path(pos: Vector2i) -> void:
 	var target_id = tile_node.get_meta(&"Id")
 	var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
 	
-	# Условие для продолжения:
 	var can_continue = not current_path_tiles.has(pos) and (
-		target_id == 0 or # Плитка пуста (разрешено)
-		(target_id == current_path_id and is_endpoint) # Плитка является EndPoint нашего цвета (разрешено: завершение пути)
+		target_id == 0 or
+		(target_id == current_path_id and is_endpoint)
 	)
 
 	if can_continue:
@@ -408,23 +362,19 @@ func draw_path(pos: Vector2i) -> void:
 			
 		tile_node.modulate = current_path_color * 0.7 
 		
-	# 2. Если это предыдущая плитка в пути (отмена/стирание)
 	elif current_path_tiles.size() > 1 and current_path_tiles[-2] == pos:
 		var removed_pos = current_path_tiles.pop_back()
 		var removed_tile = get_tile_at(removed_pos)
 	
-		# 🛑 ИСПРАВЛЕНИЕ 2: Проверка removed_tile на null перед использованием
 		if removed_tile:
 			var is_removed_endpoint = removed_tile.get_meta(&"IsEndpoint", false)
 			
 			if not is_removed_endpoint:
 				_animate_tile_draw(removed_tile, false)
 			
-			# Сброс визуализации удаленной плитки
 			if is_removed_endpoint:
 				removed_tile.modulate = current_path_color * 0.5
 			else:
-				removed_tile.modulate = Color.WHITE 
 				removed_tile.get_child(0).visible = false 
 
 func stop_drawing_path(pos: Vector2i) -> void:
@@ -435,7 +385,6 @@ func stop_drawing_path(pos: Vector2i) -> void:
 	
 	var tile_node = get_tile_at(pos)
 	
-	# Сброс, если остановились вне сетки
 	if not tile_node: 
 		_reset_path_visualization()
 		return
@@ -443,26 +392,22 @@ func stop_drawing_path(pos: Vector2i) -> void:
 	var target_id = tile_node.get_meta(&"Id")
 	var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
 	
-	# Проверка на успешное соединение
 	if target_id == current_path_id and is_endpoint and current_path_tiles.size() > 1:
 		
-		print("✅ Путь для ID %d успешно проложен!" % current_path_id)
+		print("Path for ID %d successfully laid!" % current_path_id)
 		
-		# Сохранить путь в основную сетку и финальная визуализация
 		for path_pos in current_path_tiles:
 			var final_tile = get_tile_at(path_pos)
 			
-			if final_tile: # 🛑 Проверка: Убедимся, что узел существует
+			if final_tile:
 				if not final_tile.get_meta(&"IsEndpoint", false):
 					_current_grid[path_pos.x][path_pos.y] = current_path_id
 				
-				final_tile.modulate = Color.WHITE 
 				final_tile.get_child(0).visible = true
 				final_tile.get_child(0).modulate = current_path_color
 		
 	else:
-		# Неуспешное соединение - сброс
-		print("❌ Путь для ID %d сброшен." % current_path_id)
+		print("Path for ID %d reset." % current_path_id)
 		_reset_path_visualization()
 		
 	current_path_tiles.clear()
@@ -472,19 +417,15 @@ func _reset_path_visualization() -> void:
 	for pos in current_path_tiles:
 		var tile_node = get_tile_at(pos)
 		
-		if not tile_node: continue # Пропускаем, если узел не найден
+		if not tile_node: continue
 		
 		var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
-		
-		# Сброс модулятора
-		tile_node.modulate = Color.WHITE
 		
 		if not is_endpoint:
 			tile_node.get_child(0).visible = false
 			_animate_tile_draw(tile_node, false) 
 		else:
-			# Если это Endpoint, он должен вернуться к нормальному цвету и видимости
-			tile_node.modulate = Color.WHITE * 1.0
+			tile_node.modulate = tile_node.get_meta(&"Color") * 1.0
 			tile_node.get_child(0).modulate = tile_node.get_meta(&"Color")
 			tile_node.get_child(0).visible = true
 			
