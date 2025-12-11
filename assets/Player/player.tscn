@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://du3ff15hp6sut"]
+
+[ext_resource type="Script" uid="uid://c7c8kc0afksoe" path="res://assets/Player/sprite_2d.gd" id="1_xg5j1"]
+
+[node name="Player" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+texture_repeat = 1
+script = ExtResource("1_xg5j1")
