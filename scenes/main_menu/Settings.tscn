@@ -1,0 +1,135 @@
+[gd_scene load_steps=10 format=3 uid="uid://bnx71t2uxh6kt"]
+
+[ext_resource type="Script" uid="uid://c22vdk01a1thx" path="res://scenes/main_menu/settings.gd" id="1_i0kgl"]
+[ext_resource type="Texture2D" uid="uid://cj50ps1yjvivg" path="res://assets/MainMenu/settings/background.png" id="2_o21gg"]
+[ext_resource type="Texture2D" uid="uid://cjw0bpypt1h08" path="res://assets/wires/color_circle.png" id="3_6jx7q"]
+[ext_resource type="PackedScene" uid="uid://dlsouh7k2rvbo" path="res://assets/MainMenu/BackButton.tscn" id="3_kstpm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o21gg"]
+bg_color = Color(0.03529412, 0.03529412, 0.03529412, 0.7058824)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6jx7q"]
+bg_color = Color(0.34407574, 0.34407577, 0.3440756, 0.5058824)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(0, 0, 0, 0.46666667)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kstpm"]
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 7
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+shadow_color = Color(0, 0, 0, 0.41960785)
+shadow_offset = Vector2(2, 5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_788pq"]
+bg_color = Color(0.29803923, 0, 0.40784314, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8vkoj"]
+bg_color = Color(0.29803923, 0, 0.40784314, 0.7882353)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_i0kgl")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_o21gg")
+metadata/_edit_use_anchors_ = true
+
+[node name="SettingsBackground" type="TextureRect" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -50.0
+offset_top = -50.0
+offset_right = 50.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(50, 50)
+texture = ExtResource("2_o21gg")
+stretch_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsBackground"]
+layout_mode = 0
+offset_left = 27.0
+offset_top = 32.0
+offset_right = 467.0
+offset_bottom = 472.0
+pivot_offset = Vector2(240, 240)
+
+[node name="Label" type="Label" parent="SettingsBackground/VBoxContainer"]
+z_index = 4
+texture_filter = 1
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxFlat_6jx7q")
+text = "Game Volume"
+
+[node name="HSlider" type="HSlider" parent="SettingsBackground/VBoxContainer"]
+layout_mode = 2
+theme_override_icons/grabber = ExtResource("3_6jx7q")
+theme_override_styles/slider = SubResource("StyleBoxFlat_kstpm")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_788pq")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_8vkoj")
+max_value = 1.0
+step = 0.05
+value = 0.5
+scrollable = false
+
+[node name="DifficultyButton" type="OptionButton" parent="SettingsBackground/VBoxContainer"]
+layout_mode = 2
+selected = 1
+item_count = 3
+popup/item_0/text = "easy"
+popup/item_0/id = 1
+popup/item_1/text = "normal"
+popup/item_1/id = 1
+popup/item_2/text = "hard"
+popup/item_2/id = 2
+
+[node name="CenterContainer" parent="." instance=ExtResource("3_kstpm")]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.8263889
+anchor_top = 0.845679
+anchor_right = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 0
+scale = Vector2(1, 1)
+metadata/_edit_use_anchors_ = true
+
+[connection signal="item_selected" from="SettingsBackground/VBoxContainer/DifficultyButton" to="." method="_on_difficulty_button_item_selected"]

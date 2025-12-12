@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ufh1hha1ehui"
-path="res://.godot/imported/Debug.svg-d4cb8599fa7926b76a2d6e40d2efd949.ctex"
+uid="uid://cros1wv5a5lg7"
+path="res://.godot/imported/exit.png-c216179dc6b795ee2c6395a43d7ddc01.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/discord-rpc-gd/Debug.svg"
-dest_files=["res://.godot/imported/Debug.svg-d4cb8599fa7926b76a2d6e40d2efd949.ctex"]
+source_file="res://assets/MainMenu/exit.png"
+dest_files=["res://.godot/imported/exit.png-c216179dc6b795ee2c6395a43d7ddc01.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
