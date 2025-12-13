@@ -1,0 +1,43 @@
+[gd_scene load_steps=8 format=3 uid="uid://dlsouh7k2rvbo"]
+
+[ext_resource type="Texture2D" uid="uid://cu5ag3td44yb0" path="res://assets/MainMenu/back_button.png" id="1_p5jgs"]
+[ext_resource type="Script" uid="uid://c6acyighxr8nj" path="res://assets/MainMenu/back_button.gd" id="1_pdw40"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_o21gg"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kstpm"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6jx7q"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_788pq"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8vkoj"]
+
+[node name="CenterContainer" type="CenterContainer"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 23.399998
+offset_top = -83.4
+offset_right = 223.4
+offset_bottom = 16.599998
+grow_vertical = 0
+scale = Vector2(0.25, 0.25)
+pivot_offset = Vector2(100, 50)
+script = ExtResource("1_pdw40")
+
+[node name="BackButton" type="Button" parent="."]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 46
+theme_override_styles/normal = SubResource("StyleBoxTexture_o21gg")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_kstpm")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_6jx7q")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_788pq")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_8vkoj")
+icon = ExtResource("1_p5jgs")
+
+[connection signal="pressed" from="BackButton" to="." method="_on_back_button_pressed"]

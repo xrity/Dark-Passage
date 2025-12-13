@@ -16,16 +16,19 @@ var current_path_color: Color
 var current_path_tiles: Array[Vector2i] = []
 var grid_size = Vector2i.ZERO
 
+var difficulty = get_meta("difficulty", 1.0)
+
+
 func _ready() -> void:
 	add_child(grid_container)
 	grid_container.name = "WireGrid"
-	build_field(1)
+	build_field(difficulty)
 	tile.visible = false
 
-func build_field(difficulty: float) -> void:
+func build_field(diff: float) -> void:
 	assert (grid_container.get_child_count() == 0)
 
-	var actual_difficulty = clampf(difficulty, 1.0, MAX_DIFFICULTY)
+	var actual_difficulty = clampf(diff, 1.0, MAX_DIFFICULTY)
 	var new_tile_scale = Vector2(tile.scale.x / actual_difficulty, tile.scale.y / actual_difficulty)
 	tile.scale = new_tile_scale
 	
@@ -212,13 +215,13 @@ func _animate_tile_draw(node: CanvasItem, appear: bool) -> void:
 	var tween = create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	
-	var final_alpha = 1.0 if appear else 0.0
+	var final_alpha = 1.0 if appear else 1.0
 	var duration = 0.2
 	
 	tween.tween_property(node, "modulate:a", final_alpha, duration)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
+	if event is InputEventMouseButton or event is InputEventScreenTouch:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			var grid_pos = screen_to_grid(event.position)
 			
@@ -267,13 +270,13 @@ func screen_to_grid(screen_pos: Vector2) -> Vector2i:
 	var tile_W = tile.texture.get_size().x * tile.scale.x
 	var tile_H = tile.texture.get_size().y * tile.scale.y
 	
-	var x = floor((relative_pos.x / tile_W) - 0.5) 
-	var y = floor((relative_pos.y / tile_H) - 0.5)
+	var x = floor((relative_pos.x / tile_W)) 
+	var y = floor((relative_pos.y / tile_H))
 	
 	return Vector2i(x, y)
 
 func is_valid_grid_pos(pos: Vector2i) -> bool:
-	return pos.x >= 0 and pos.y >= 0 and pos.x < grid_size.x and pos.y < grid_size.y
+	return pos.x >= 0 and pos.y >= 0 and pos.x <= grid_size.x and pos.y <= grid_size.y
 
 func get_tile_at(pos: Vector2i) -> Sprite2D:
 	if not is_valid_grid_pos(pos):
@@ -371,11 +374,9 @@ func draw_path(pos: Vector2i) -> void:
 			
 			if not is_removed_endpoint:
 				_animate_tile_draw(removed_tile, false)
-			
-			if is_removed_endpoint:
-				removed_tile.modulate = current_path_color * 0.5
 			else:
 				removed_tile.get_child(0).visible = false 
+				
 
 func stop_drawing_path(pos: Vector2i) -> void:
 	if not is_drawing:
@@ -425,7 +426,7 @@ func _reset_path_visualization() -> void:
 			tile_node.get_child(0).visible = false
 			_animate_tile_draw(tile_node, false) 
 		else:
-			tile_node.modulate = tile_node.get_meta(&"Color") * 1.0
+			#tile_node.modulate = tile_node.get_meta(&"Color") * 1.0
 			tile_node.get_child(0).modulate = tile_node.get_meta(&"Color")
 			tile_node.get_child(0).visible = true
 			

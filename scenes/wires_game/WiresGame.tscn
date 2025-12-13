@@ -1,0 +1,60 @@
+[gd_scene load_steps=7 format=3 uid="uid://gvolnhlu6fsa"]
+
+[ext_resource type="Script" uid="uid://k1t22j2wqh6x" path="res://scenes/wires_game/wires_game.gd" id="1_d27w7"]
+[ext_resource type="PackedScene" uid="uid://jdy24qy5tvqf" path="res://assets/wires/wire_tile_sprite.tscn" id="2_d27w7"]
+[ext_resource type="PackedScene" uid="uid://dlsouh7k2rvbo" path="res://assets/MainMenu/BackButton.tscn" id="3_7imr6"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_4up7c"]
+
+[sub_resource type="Gradient" id="Gradient_d27w7"]
+colors = PackedColorArray(0, 0, 0, 0.5764706, 0, 0, 0, 0.5764706)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ljwgo"]
+gradient = SubResource("Gradient_d27w7")
+width = 1152
+height = 648
+fill_to = Vector2(1, 1)
+
+[node name="wiresGame" type="Node2D"]
+process_priority = 1
+z_index = 4
+texture_filter = 1
+texture_repeat = 1
+script = ExtResource("1_d27w7")
+metadata/difficulty = 0.0
+
+[node name="wiresFieldSprite" type="Sprite2D" parent="."]
+clip_children = 2
+z_index = 9
+position = Vector2(333.00003, 82)
+scale = Vector2(486, 486)
+texture = SubResource("CanvasTexture_4up7c")
+offset = Vector2(0.49999994, 0.5)
+
+[node name="wireTileSprite" parent="." instance=ExtResource("2_d27w7")]
+z_index = 24
+position = Vector2(333.00003, 82)
+scale = Vector2(1.44, 1.44)
+
+[node name="lineConnector" type="Sprite2D" parent="."]
+z_index = 10
+position = Vector2(333, 82)
+offset = Vector2(-333, -82)
+
+[node name="backgr" type="Sprite2D" parent="."]
+z_index = 7
+texture = SubResource("GradientTexture2D_ljwgo")
+offset = Vector2(576, 324)
+
+[node name="CenterContainer" parent="." instance=ExtResource("3_7imr6")]
+z_index = 8
+anchors_preset = 0
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = 951.0
+offset_top = 546.0
+offset_right = 1151.0
+offset_bottom = 646.0
+grow_vertical = 1
+scale = Vector2(1, 1)
+metadata/_edit_use_anchors_ = true
