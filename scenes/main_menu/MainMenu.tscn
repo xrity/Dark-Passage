@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://p3t4x21ymjyf"]
+[gd_scene load_steps=23 format=3 uid="uid://p3t4x21ymjyf"]
 
 [ext_resource type="Script" uid="uid://ccsexhsqc24vs" path="res://scenes/main_menu/main_menu.gd" id="1_e2xy7"]
 [ext_resource type="Texture2D" uid="uid://cf0p70aaoucwg" path="res://assets/MainMenu/background.png" id="1_i26rj"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://cnwfkhfiilasg" path="res://assets/MainMenu/game_library.png" id="6_7r1g0"]
 [ext_resource type="Texture2D" uid="uid://ld3gapeoktoj" path="res://assets/MainMenu/game_name.png" id="8_fimr5"]
 [ext_resource type="AudioStream" uid="uid://p0hroquylmqc" path="res://assets/music/main-menu-music.mp3" id="9_6k0m2"]
+[ext_resource type="AudioStream" uid="uid://bm6mf4ju6w7tj" path="res://assets/music/menuclickbutton.mp3" id="10_qq55g"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_e2xy7"]
 
@@ -144,9 +145,6 @@ pivot_offset = Vector2(142.88, 94.553)
 texture = ExtResource("8_fimr5")
 metadata/_edit_use_anchors_ = true
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("9_6k0m2")
-
 [node name="main_menu_buttons" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 3
@@ -183,6 +181,16 @@ icon = ExtResource("6_7r1g0")
 libraries = {
 &"": SubResource("AnimationLibrary_pkvjm")
 }
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_6k0m2")
+volume_db = -24.867
+autoplay = true
+bus = &"Music"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("10_qq55g")
+volume_db = -5.765
 
 [connection signal="pressed" from="GameButtons/NewGameButton" to="." method="_on_new_game_button_pressed"]
 [connection signal="pressed" from="GameButtons/SavedGamesButton" to="." method="_on_saved_games_button_pressed"]

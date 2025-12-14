@@ -52,19 +52,24 @@ func _on_button_mouse_exited(button: Button):
 
 
 func _on_new_game_button_pressed() -> void:
+	$AudioStreamPlayer2D.play()
 	pass
 	
 
 func _on_saved_games_button_pressed() -> void:
+	$AudioStreamPlayer2D.play()
 	pass # Replace with function body.
 
 
 func _on_exit_button_pressed() -> void:
+	$AudioStreamPlayer2D.play()
 	get_tree().quit()
 
 func _on_settings_button_pressed() -> void:
+	$AudioStreamPlayer2D.play()
 	var settings = Settings_scene.instantiate()
 	add_child(settings)
 
 func _on_game_library_button_pressed() -> void:
+	$AudioStreamPlayer2D.play()
 	pass # Replace with function body.
