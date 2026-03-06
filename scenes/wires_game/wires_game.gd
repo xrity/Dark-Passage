@@ -17,6 +17,13 @@ var current_path_tiles: Array[Vector2i] = []
 var grid_size = Vector2i.ZERO
 
 var difficulty = get_meta("difficulty", 1.0)
+var is_paused = false
+
+# Переменные для паузы
+var pause_layer: CanvasLayer
+var pause_overlay: ColorRect
+var resume_btn: Button
+var menu_btn: Button
 
 
 func _ready() -> void:
@@ -24,6 +31,82 @@ func _ready() -> void:
 	grid_container.name = "WireGrid"
 	build_field(difficulty)
 	tile.visible = false
+	
+	# Создаем меню паузы
+	create_pause_menu()
+
+func create_pause_menu():
+	pause_layer = CanvasLayer.new()
+	pause_layer.layer = 128
+	pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(pause_layer)
+	
+	pause_overlay = ColorRect.new()
+	pause_overlay.color = Color(0, 0, 0, 0.7)
+	pause_overlay.size = get_viewport().get_visible_rect().size
+	pause_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	pause_overlay.visible = false
+	pause_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	pause_layer.add_child(pause_overlay)
+	
+	resume_btn = Button.new()
+	resume_btn.text = "Продовжити"
+	resume_btn.position = Vector2(400, 300)
+	resume_btn.size = Vector2(200, 50)
+	resume_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	resume_btn.pressed.connect(_on_resume_button_pressed)
+	pause_overlay.add_child(resume_btn)
+	
+	menu_btn = Button.new()
+	menu_btn.text = "Вийти в меню"
+	menu_btn.position = Vector2(400, 360)
+	menu_btn.size = Vector2(200, 50)
+	menu_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	menu_btn.pressed.connect(_on_menu_button_pressed)
+	pause_overlay.add_child(menu_btn)
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		toggle_pause()
+
+func toggle_pause():
+	is_paused = !is_paused
+	get_tree().paused = is_paused
+	pause_overlay.visible = is_paused
+	
+	if is_paused:
+		# Включаем паузу
+		get_tree().paused = true
+		if pause_overlay:
+			pause_overlay.visible = true
+	else:
+		# Выключаем паузу
+		get_tree().paused = false
+		if pause_overlay:
+			pause_overlay.visible = false
+
+func _on_resume_button_pressed():
+	$ButtonSound.play()
+	await $ButtonSound.finished
+	toggle_pause()
+	
+func _on_menu_button_pressed():
+	$ButtonSound.play()
+	await $ButtonSound.finished
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
+
+# ========== МЕТОД ДЛЯ КНОПКИ НАЗАД ==========
+func _on_back_button_pressed() -> void:
+	# Проигрываем звук если есть
+	if has_node("AudioStreamPlayer2D"):
+		$AudioStreamPlayer2D.play()
+	
+	# Небольшая задержка для звука
+	await get_tree().create_timer(0.1).timeout
+	
+	# Возвращаемся в главное меню
+	get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
 
 func build_field(diff: float) -> void:
 	assert (grid_container.get_child_count() == 0)
@@ -221,6 +304,10 @@ func _animate_tile_draw(node: CanvasItem, appear: bool) -> void:
 	tween.tween_property(node, "modulate:a", final_alpha, duration)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Если игра на паузе, не обрабатываем игровой ввод
+	if is_paused:
+		return
+		
 	if event is InputEventMouseButton or event is InputEventScreenTouch:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			var grid_pos = screen_to_grid(event.position)
@@ -426,7 +513,6 @@ func _reset_path_visualization() -> void:
 			tile_node.get_child(0).visible = false
 			_animate_tile_draw(tile_node, false) 
 		else:
-			#tile_node.modulate = tile_node.get_meta(&"Color") * 1.0
 			tile_node.get_child(0).modulate = tile_node.get_meta(&"Color")
 			tile_node.get_child(0).visible = true
 			

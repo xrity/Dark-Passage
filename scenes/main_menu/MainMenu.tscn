@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://p3t4x21ymjyf"]
+[gd_scene format=3 uid="uid://p3t4x21ymjyf"]
 
 [ext_resource type="Script" uid="uid://ccsexhsqc24vs" path="res://scenes/main_menu/main_menu.gd" id="1_e2xy7"]
 [ext_resource type="Texture2D" uid="uid://cf0p70aaoucwg" path="res://assets/MainMenu/background.png" id="1_i26rj"]
@@ -63,7 +63,7 @@ _data = {
 &"RESET": SubResource("Animation_qq55g")
 }
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1935702492]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -72,7 +72,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_e2xy7")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=1859788930]
 texture_filter = 3
 texture_repeat = 1
 layout_mode = 1
@@ -83,7 +83,7 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_i26rj")
 
-[node name="GameButtons" type="VBoxContainer" parent="."]
+[node name="GameButtons" type="VBoxContainer" parent="." unique_id=905396577]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 4
@@ -96,7 +96,7 @@ grow_vertical = 2
 pivot_offset = Vector2(167.29, 136)
 alignment = 1
 
-[node name="NewGameButton" type="Button" parent="GameButtons"]
+[node name="NewGameButton" type="Button" parent="GameButtons" unique_id=2125809257]
 texture_filter = 3
 layout_mode = 2
 size_flags_horizontal = 0
@@ -108,7 +108,7 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_31qfy")
 icon = ExtResource("2_eiy7p")
 icon_alignment = 1
 
-[node name="SavedGamesButton" type="Button" parent="GameButtons"]
+[node name="SavedGamesButton" type="Button" parent="GameButtons" unique_id=19468172]
 texture_filter = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_e2xy7")
@@ -119,7 +119,7 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_31qfy")
 icon = ExtResource("3_h7a2f")
 icon_alignment = 1
 
-[node name="ExitButton" type="Button" parent="GameButtons"]
+[node name="ExitButton" type="Button" parent="GameButtons" unique_id=2046279957]
 texture_filter = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_e2xy7")
@@ -130,7 +130,7 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_31qfy")
 icon = ExtResource("4_qoqlk")
 icon_alignment = 1
 
-[node name="GameName" type="TextureRect" parent="."]
+[node name="GameName" type="TextureRect" parent="." unique_id=1201879626]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.39930555
@@ -145,7 +145,7 @@ pivot_offset = Vector2(142.88, 94.553)
 texture = ExtResource("8_fimr5")
 metadata/_edit_use_anchors_ = true
 
-[node name="main_menu_buttons" type="VBoxContainer" parent="."]
+[node name="main_menu_buttons" type="VBoxContainer" parent="." unique_id=1536511303]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -157,7 +157,7 @@ offset_top = -204.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="SettingsButton" type="Button" parent="main_menu_buttons"]
+[node name="SettingsButton" type="Button" parent="main_menu_buttons" unique_id=1360510789]
 texture_filter = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_qie43")
@@ -167,7 +167,7 @@ theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_3fnrj")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_m04lp")
 icon = ExtResource("5_iwfq2")
 
-[node name="GameLibraryButton" type="Button" parent="main_menu_buttons"]
+[node name="GameLibraryButton" type="Button" parent="main_menu_buttons" unique_id=912093856]
 texture_filter = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_qie43")
@@ -177,18 +177,15 @@ theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_3fnrj")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_m04lp")
 icon = ExtResource("6_7r1g0")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_pkvjm")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1775904738]
+libraries/ = SubResource("AnimationLibrary_pkvjm")
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=192008632]
 stream = ExtResource("9_6k0m2")
 volume_db = -24.867
 autoplay = true
-bus = &"Music"
 
-[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=162935908]
 stream = ExtResource("10_qq55g")
 volume_db = -5.765
 

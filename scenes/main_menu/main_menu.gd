@@ -53,7 +53,8 @@ func _on_button_mouse_exited(button: Button):
 
 func _on_new_game_button_pressed() -> void:
 	$AudioStreamPlayer2D.play()
-	pass
+	await $AudioStreamPlayer2D.finished
+	get_tree().change_scene_to_packed(Game_scene)
 	
 
 func _on_saved_games_button_pressed() -> void:
