@@ -6,9 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bugn20bc1lq1q" path="res://assets/MainMenu/savedgames.png" id="3_h7a2f"]
 [ext_resource type="Texture2D" uid="uid://cros1wv5a5lg7" path="res://assets/MainMenu/exit.png" id="4_qoqlk"]
 [ext_resource type="Texture2D" uid="uid://edoqujjeqmea" path="res://assets/MainMenu/Settings.png" id="5_iwfq2"]
-[ext_resource type="Texture2D" uid="uid://cnwfkhfiilasg" path="res://assets/MainMenu/game_library.png" id="6_7r1g0"]
 [ext_resource type="Texture2D" uid="uid://ld3gapeoktoj" path="res://assets/MainMenu/game_name.png" id="8_fimr5"]
-[ext_resource type="AudioStream" uid="uid://p0hroquylmqc" path="res://assets/music/main-menu-music.mp3" id="9_6k0m2"]
 [ext_resource type="AudioStream" uid="uid://bm6mf4ju6w7tj" path="res://assets/music/menuclickbutton.mp3" id="10_qq55g"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_e2xy7"]
@@ -31,38 +29,6 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m04lp"]
 
-[sub_resource type="Animation" id="Animation_qq55g"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("GameName:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [0.0]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("GameName:scale")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(1.995, 1.995)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_pkvjm"]
-_data = {
-&"RESET": SubResource("Animation_qq55g")
-}
-
 [node name="MainMenu" type="Control" unique_id=1935702492]
 layout_mode = 3
 anchors_preset = 15
@@ -83,22 +49,26 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_i26rj")
 
-[node name="GameButtons" type="VBoxContainer" parent="." unique_id=905396577]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_top = -136.5
-offset_right = 334.58
-offset_bottom = 136.5
-grow_vertical = 2
-pivot_offset = Vector2(167.29, 136)
-alignment = 1
+[node name="GameName" type="TextureRect" parent="." unique_id=368729109]
+layout_mode = 0
+offset_left = 182.0
+offset_top = 19.0
+offset_right = 1000.0
+offset_bottom = 210.0
+texture = ExtResource("8_fimr5")
 
-[node name="NewGameButton" type="Button" parent="GameButtons" unique_id=2125809257]
+[node name="Buttons" type="Panel" parent="." unique_id=1994986180]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="NewGameButton" type="Button" parent="Buttons" unique_id=1759962374]
 texture_filter = 3
-layout_mode = 2
+layout_mode = 0
+offset_left = 44.0
+offset_top = 249.0
+offset_right = 344.0
+offset_bottom = 374.00003
 size_flags_horizontal = 0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_e2xy7")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_fimr5")
@@ -108,9 +78,14 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_31qfy")
 icon = ExtResource("2_eiy7p")
 icon_alignment = 1
 
-[node name="SavedGamesButton" type="Button" parent="GameButtons" unique_id=19468172]
+[node name="SavedGamesButton" type="Button" parent="Buttons" unique_id=2146947465]
 texture_filter = 3
-layout_mode = 2
+layout_mode = 0
+offset_left = 65.0
+offset_top = 367.0
+offset_right = 305.00024
+offset_bottom = 437.00003
+scale = Vector2(1.5, 1.5)
 theme_override_styles/normal = SubResource("StyleBoxEmpty_e2xy7")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_fimr5")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_u7cqb")
@@ -119,9 +94,13 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_31qfy")
 icon = ExtResource("3_h7a2f")
 icon_alignment = 1
 
-[node name="ExitButton" type="Button" parent="GameButtons" unique_id=2046279957]
+[node name="ExitButton" type="Button" parent="Buttons" unique_id=442795930]
 texture_filter = 3
-layout_mode = 2
+layout_mode = 0
+offset_left = 110.0
+offset_top = 461.0
+offset_right = 280.0
+offset_bottom = 531.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_e2xy7")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_fimr5")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_u7cqb")
@@ -130,36 +109,13 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_31qfy")
 icon = ExtResource("4_qoqlk")
 icon_alignment = 1
 
-[node name="GameName" type="TextureRect" parent="." unique_id=1201879626]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.39930555
-anchor_top = 0.021604938
-anchor_right = 0.8941765
-anchor_bottom = 0.60380316
-offset_right = -284.3313
-offset_bottom = -188.15947
-grow_horizontal = 2
-scale = Vector2(1.995, 1.995)
-pivot_offset = Vector2(142.88, 94.553)
-texture = ExtResource("8_fimr5")
-metadata/_edit_use_anchors_ = true
-
-[node name="main_menu_buttons" type="VBoxContainer" parent="." unique_id=1536511303]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -100.0
-offset_top = -204.0
-grow_horizontal = 0
-grow_vertical = 0
-
-[node name="SettingsButton" type="Button" parent="main_menu_buttons" unique_id=1360510789]
+[node name="SettingsButton" type="Button" parent="Buttons" unique_id=889010160]
 texture_filter = 3
-layout_mode = 2
+layout_mode = 0
+offset_left = 1051.0
+offset_top = 548.0
+offset_right = 1151.0
+offset_bottom = 648.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_qie43")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_61cf8")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_rnncn")
@@ -167,30 +123,11 @@ theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_3fnrj")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_m04lp")
 icon = ExtResource("5_iwfq2")
 
-[node name="GameLibraryButton" type="Button" parent="main_menu_buttons" unique_id=912093856]
-texture_filter = 3
-layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxEmpty_qie43")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_61cf8")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_rnncn")
-theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_3fnrj")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_m04lp")
-icon = ExtResource("6_7r1g0")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1775904738]
-libraries/ = SubResource("AnimationLibrary_pkvjm")
-
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=192008632]
-stream = ExtResource("9_6k0m2")
-volume_db = -24.867
-autoplay = true
-
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=162935908]
 stream = ExtResource("10_qq55g")
 volume_db = -5.765
 
-[connection signal="pressed" from="GameButtons/NewGameButton" to="." method="_on_new_game_button_pressed"]
-[connection signal="pressed" from="GameButtons/SavedGamesButton" to="." method="_on_saved_games_button_pressed"]
-[connection signal="pressed" from="GameButtons/ExitButton" to="." method="_on_exit_button_pressed"]
-[connection signal="pressed" from="main_menu_buttons/SettingsButton" to="." method="_on_settings_button_pressed"]
-[connection signal="pressed" from="main_menu_buttons/GameLibraryButton" to="." method="_on_game_library_button_pressed"]
+[connection signal="pressed" from="Buttons/NewGameButton" to="." method="_on_new_game_button_pressed"]
+[connection signal="pressed" from="Buttons/SavedGamesButton" to="." method="_on_saved_games_button_pressed"]
+[connection signal="pressed" from="Buttons/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="Buttons/SettingsButton" to="." method="_on_settings_button_pressed"]
