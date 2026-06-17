@@ -1,32 +1,47 @@
 extends CharacterBody2D
+## ============================================================
+##  Player
+##  Движение перенесено в _physics_process (правильно для move_and_slide).
+##  Направление взгляда (up/down) хранится между кадрами,
+##  горизонталь только отражает спрайт.
+## ============================================================
 
-@export var move_speed = 500
-@onready var sprite = $Sprite2D
-@onready var animations = $AnimationPlayer
-@onready var camera = $Camera2D
-var player_rotation = "down"
+@export var move_speed: float = 500.0
 
-func handle_input():
-	var direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	velocity = direction * move_speed
-	
-func direction_player():
-	player_rotation = 'down'
-	if velocity.y < 0: 
-		player_rotation = 'up'
-	if velocity.x < 0: 
-		sprite.scale.x = -1
-	if velocity.x > 0:
-		sprite.scale.x = 1
-	return player_rotation
-	
-func updateAnimation():
-	if velocity.length() == 0:
-		animations.play('idle_' + player_rotation)
+@onready var _sprite: Sprite2D = $Sprite2D
+@onready var _anim: AnimationPlayer = $AnimationPlayer
+@onready var _camera: Camera2D = $Camera2D
+
+var _facing: String = "down"
+
+
+func _physics_process(_delta: float) -> void:
+	# Если идёт диалог — игрок стоит (на случай, если время не на паузе).
+	if DialogueBox.is_active():
+		velocity = Vector2.ZERO
 	else:
-		animations.play('walk_' + direction_player())
-		
-func _process(_delta):
-	handle_input()
+		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+		velocity = dir * move_speed
+
 	move_and_slide()
-	updateAnimation()
+	_update_facing()
+	_update_animation()
+
+
+func _update_facing() -> void:
+	if velocity.y < 0.0:
+		_facing = "up"
+	elif velocity.y > 0.0:
+		_facing = "down"
+
+	if velocity.x < 0.0:
+		_sprite.scale.x = -absf(_sprite.scale.x)
+	elif velocity.x > 0.0:
+		_sprite.scale.x = absf(_sprite.scale.x)
+
+
+func _update_animation() -> void:
+	if velocity.is_zero_approx():
+		_anim.play("idle_" + _facing)
+	else:
+		_anim.play("walk_" + _facing)

@@ -1,519 +1,537 @@
 extends Node2D
+## ============================================================
+##  WiresGame  (головоломка соединения проводов / Flow-style)
+##  Изменения:
+##    • сложность берётся из синглтона Settings (а не из meta);
+##    • добавлено определение победы (все пары соединены и поле
+##      заполнено) + оверлей «Рівень пройдено!»;
+##    • это ЕДИНСТВЕННАЯ версия — back_button.gd (дубликат) удалить.
+## ============================================================
 
-@onready var field = $wiresFieldSprite
-@onready var tile = $wireTileSprite
-@onready var grid_container = Node2D.new()
+@onready var _field_sprite:  Sprite2D            = $wiresFieldSprite
+@onready var _tile_template: Sprite2D            = $wireTileSprite
+@onready var _sfx_button:    AudioStreamPlayer   = $ButtonSound
 
-const MAX_PAIRS = 15
-const MIN_PAIRS = 3
-const MAX_DIFFICULTY = 3.0
-var _current_grid: Array[Array] = []
-var _current_colors: Dictionary = {}
+var _grid_root: Node2D
 
-var is_drawing = false
-var current_path_id = 0
-var current_path_color: Color
-var current_path_tiles: Array[Vector2i] = []
-var grid_size = Vector2i.ZERO
+## Вбудований режим: запущено поверх лабіринту. У цьому режимі
+## вихід/перемога не міняють сцену, а закривають міні-гру (сигнал closed).
+@export var embedded: bool = false
+signal closed
 
-var difficulty = get_meta("difficulty", 1.0)
-var is_paused = false
+const MAX_PAIRS:      int   = 15
+const MIN_PAIRS:      int   = 3
+const MAX_DIFFICULTY: float = 3.0
 
-# Переменные для паузы
-var pause_layer: CanvasLayer
-var pause_overlay: ColorRect
-var resume_btn: Button
-var menu_btn: Button
+# ── grid state ────────────────────────────────────────────────
+var _grid:      Array[Array] = []   # _grid[x][y] → path-id (0 = пусто)
+var _colors:    Dictionary   = {}   # id → Color
+var _tile_map:  Dictionary   = {}   # Vector2i → Sprite2D  (O(1))
+var _grid_size: Vector2i     = Vector2i.ZERO
+var _tile_size: Vector2      = Vector2.ZERO
+
+# ── drawing state ─────────────────────────────────────────────
+var _drawing:    bool            = false
+var _path_id:    int             = 0
+var _path_color: Color
+var _path_tiles: Array[Vector2i] = []
+
+# ── win state ─────────────────────────────────────────────────
+var _pair_count:    int        = 0
+var _completed_ids: Dictionary = {}   # id → true
+var _won:           bool        = false
+
+# ── difficulty (из глобальных настроек) ───────────────────────
+var difficulty: float = float(Settings.difficulty)
+
+# ── pause ─────────────────────────────────────────────────────
+var _paused:        bool      = false
+var _pause_layer:   CanvasLayer
+var _pause_overlay: ColorRect
+var _resume_btn:    Button
+var _menu_btn:      Button
 
 
+# ============================================================
+#  LIFECYCLE
+# ============================================================
 func _ready() -> void:
-	add_child(grid_container)
-	grid_container.name = "WireGrid"
-	build_field(difficulty)
-	tile.visible = false
-	
-	# Создаем меню паузы
-	create_pause_menu()
+	_grid_root = Node2D.new()
+	_grid_root.name = "WireGrid"
+	add_child(_grid_root)
 
-func create_pause_menu():
-	pause_layer = CanvasLayer.new()
-	pause_layer.layer = 128
-	pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(pause_layer)
-	
-	pause_overlay = ColorRect.new()
-	pause_overlay.color = Color(0, 0, 0, 0.7)
-	pause_overlay.size = get_viewport().get_visible_rect().size
-	pause_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	pause_overlay.visible = false
-	pause_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-	pause_layer.add_child(pause_overlay)
-	
-	resume_btn = Button.new()
-	resume_btn.text = "Продовжити"
-	resume_btn.position = Vector2(400, 300)
-	resume_btn.size = Vector2(200, 50)
-	resume_btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	resume_btn.pressed.connect(_on_resume_button_pressed)
-	pause_overlay.add_child(resume_btn)
-	
-	menu_btn = Button.new()
-	menu_btn.text = "Вийти в меню"
-	menu_btn.position = Vector2(400, 360)
-	menu_btn.size = Vector2(200, 50)
-	menu_btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	menu_btn.pressed.connect(_on_menu_button_pressed)
-	pause_overlay.add_child(menu_btn)
+	_tile_template.visible = false
+	_build_field(difficulty)
+	_create_pause_menu()
+
+
+# ============================================================
+#  PAUSE
+# ============================================================
+func _create_pause_menu() -> void:
+	_pause_layer = CanvasLayer.new()
+	_pause_layer.layer = 128
+	_pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_pause_layer)
+
+	_pause_overlay = ColorRect.new()
+	_pause_overlay.color = Color(0.0, 0.0, 0.0, 0.7)
+	_pause_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_pause_overlay.visible = false
+	_pause_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	_pause_layer.add_child(_pause_overlay)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.custom_minimum_size = Vector2(220, 120)
+	_pause_overlay.add_child(vbox)
+
+	_resume_btn = _make_btn("Продовжити", vbox)
+	_menu_btn   = _make_btn("Вийти в меню", vbox)
+
+	_resume_btn.pressed.connect(_on_resume_pressed)
+	_menu_btn.pressed.connect(_on_menu_pressed)
+
+
+func _make_btn(label: String, parent: Node) -> Button:
+	var btn := Button.new()
+	btn.text = label
+	btn.custom_minimum_size = Vector2(200, 50)
+	btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	parent.add_child(btn)
+	return btn
+
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		toggle_pause()
+	if event.is_action_pressed("ui_cancel") and not _won:
+		_toggle_pause()
 
-func toggle_pause():
-	is_paused = !is_paused
-	get_tree().paused = is_paused
-	pause_overlay.visible = is_paused
-	
-	if is_paused:
-		# Включаем паузу
-		get_tree().paused = true
-		if pause_overlay:
-			pause_overlay.visible = true
-	else:
-		# Выключаем паузу
-		get_tree().paused = false
-		if pause_overlay:
-			pause_overlay.visible = false
 
-func _on_resume_button_pressed():
-	$ButtonSound.play()
-	await $ButtonSound.finished
-	toggle_pause()
-	
-func _on_menu_button_pressed():
-	$ButtonSound.play()
-	await $ButtonSound.finished
+func _toggle_pause() -> void:
+	_paused = not _paused
+	get_tree().paused      = _paused
+	_pause_overlay.visible = _paused
+
+
+func _on_resume_pressed() -> void:
+	_sfx_button.play()
+	await _sfx_button.finished
+	_toggle_pause()
+
+
+func _on_menu_pressed() -> void:
+	_sfx_button.play()
+	await _sfx_button.finished
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
 
-# ========== МЕТОД ДЛЯ КНОПКИ НАЗАД ==========
+
 func _on_back_button_pressed() -> void:
-	# Проигрываем звук если есть
-	if has_node("AudioStreamPlayer2D"):
-		$AudioStreamPlayer2D.play()
-	
-	# Небольшая задержка для звука
-	await get_tree().create_timer(0.1).timeout
-	
-	# Возвращаемся в главное меню
-	get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
+	if embedded:
+		closed.emit()
+	else:
+		get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
 
-func build_field(diff: float) -> void:
-	assert (grid_container.get_child_count() == 0)
 
-	var actual_difficulty = clampf(diff, 1.0, MAX_DIFFICULTY)
-	var new_tile_scale = Vector2(tile.scale.x / actual_difficulty, tile.scale.y / actual_difficulty)
-	tile.scale = new_tile_scale
-	
-	var tile_W = tile.texture.get_size().x * tile.scale.x
-	var tile_H = tile.texture.get_size().y * tile.scale.y
-	
-	var cols = int(field.scale.x / tile_W)
-	var rows = int(field.scale.y / tile_H)
-	
-	grid_size = Vector2i(cols, rows)
-	var total_tiles = cols * rows
+# ============================================================
+#  FIELD BUILDING
+# ============================================================
+func _build_field(diff: float) -> void:
+	assert(_grid_root.get_child_count() == 0, "Grid root must be empty before building.")
 
-	var max_possible_pairs = floor(total_tiles / 3.0)
-	var max_pairs_limit = min(MAX_PAIRS, max_possible_pairs)
-	var rng = RandomNumberGenerator.new()
-	var pair_count: int = rng.randi_range(MIN_PAIRS, max_pairs_limit)
-	
-	var result = generate_field(cols, rows, pair_count)
-	
-	_current_grid = result["grid"]
-	_current_colors = result["colors"]
-	var endpoints = result["endpoints"]
-	
-	place_tiles(_current_grid, _current_colors, endpoints)
+	var d := clampf(diff, 1.0, MAX_DIFFICULTY)
 
-func find_empty_position(cols: int, rows: int, occupied_list: Array[Vector2i]) -> Vector2i:
-	var rng = RandomNumberGenerator.new()
+	_tile_template.scale = _tile_template.scale / d
+	_tile_size = _tile_template.texture.get_size() * _tile_template.scale
+
+	var cols := int(_field_sprite.scale.x / _tile_size.x)
+	var rows := int(_field_sprite.scale.y / _tile_size.y)
+	_grid_size = Vector2i(cols, rows)
+
+	var max_pairs := mini(MAX_PAIRS, int(floor(cols * rows / 3.0)))
+	var rng := _new_rng()
+	_pair_count = rng.randi_range(MIN_PAIRS, max_pairs)
+
+	var result := _generate_field(cols, rows, _pair_count)
+	_grid   = result["grid"]   as Array
+	_colors = result["colors"] as Dictionary
+	# реальное число успешно размещённых пар
+	_pair_count = (result["colors"] as Dictionary).size()
+
+	_place_tiles(result["endpoints"] as Array)
+
+
+func _new_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	var pos: Vector2i
-	var attempts = 0
-	while true:
-		pos = Vector2i(rng.randi_range(0, cols - 1), rng.randi_range(0, rows - 1))
-		if not occupied_list.has(pos):
-			return pos
-		attempts += 1
-		if attempts > 1000:
-			push_error("cant find empty position")
-			return Vector2i.ZERO
-			
-	return pos
+	return rng
 
-func generate_field(cols: int, rows: int, pair_count: int) -> Dictionary:
-	var grid: Array[Array] = []
-	var occupied_for_path_gen: Array[Array] = []
-	for x in range(cols):
+
+# ============================================================
+#  GRID GENERATION
+# ============================================================
+func _generate_field(cols: int, rows: int, pair_count: int) -> Dictionary:
+	var grid:         Array[Array] = []
+	var occupied_map: Array[Array] = []
+	for x in cols:
 		grid.append([])
-		occupied_for_path_gen.append([])
-		for y in range(rows):
+		occupied_map.append([])
+		for _y in rows:
 			grid[x].append(0)
-			occupied_for_path_gen[x].append(false)
+			occupied_map[x].append(false)
 
-	var rng = RandomNumberGenerator.new()
-	rng.randomize()
-	
-	var color_table := {}
+	var rng := _new_rng()
+	var colors:    Dictionary        = {}
 	var endpoints: Array[Dictionary] = []
 
-	var all_occupied_endpoints: Array[Vector2i] = []
-	
 	for i in range(1, pair_count + 1):
-		color_table[i] = Color(rng.randf(), rng.randf(), rng.randf())
-		
-		var start_pos: Vector2i
-		var end_pos: Vector2i
-		
-		start_pos = find_empty_position(cols, rows, all_occupied_endpoints)
-		
-		var attempts = 0
-		while true:
-			end_pos = Vector2i(rng.randi_range(0, cols - 1), rng.randi_range(0, rows - 1))
-			
-			if end_pos != start_pos and not all_occupied_endpoints.has(end_pos):
-				if start_pos.distance_to(end_pos) >= 2.0:
-					break
-			
-			attempts += 1
-			if attempts > 1000:
-				push_error("cant find end point for pair %d" % i)
-				break
-		
-		if attempts > 1000: continue
-
-		var path = build_path(start_pos, end_pos, grid_size, occupied_for_path_gen)
-		
-		if path.is_empty() and start_pos != end_pos:
-			push_warning("AStar cant find path for pair %d. Skipping." % i)
+		var start := _random_free_pos(cols, rows, occupied_map, rng)
+		if start == Vector2i(-1, -1):
 			continue
-		all_occupied_endpoints.append(start_pos)
-		all_occupied_endpoints.append(end_pos)
-		
-		endpoints.append({"pos": start_pos, "id": i})
-		endpoints.append({"pos": end_pos, "id": i})
+		var end := _random_far_pos(cols, rows, start, occupied_map, rng)
 
-		for pos in path:
-			occupied_for_path_gen[pos.x][pos.y] = true
-			
-		occupied_for_path_gen[start_pos.x][start_pos.y] = true
-		occupied_for_path_gen[end_pos.x][end_pos.y] = true
+		if end == Vector2i(-1, -1):
+			push_warning("Could not place endpoint pair %d — skipping." % i)
+			continue
 
-		grid[start_pos.x][start_pos.y] = i
-		grid[end_pos.x][end_pos.y] = i
-		
-	return {
-		"grid": grid,
-		"colors": color_table,
-		"endpoints": endpoints
-	}
+		var path := _build_astar_path(start, end, occupied_map)
+		if path.is_empty() and start != end:
+			push_warning("A* found no path for pair %d — skipping." % i)
+			continue
 
-func build_path(start: Vector2i, end: Vector2i, size: Vector2i, occupied_map: Array[Array]) -> Array[Vector2i]:
-	var astar = AStarGrid2D.new()
-	astar.size = size
-	astar.cell_size = Vector2(1, 1)
-	astar.offset = Vector2i.ZERO
-	
+		colors[i] = Color(rng.randf(), rng.randf(), rng.randf())
+
+		for p: Vector2i in path:
+			occupied_map[p.x][p.y] = true
+		occupied_map[start.x][start.y] = true
+		occupied_map[end.x][end.y]     = true
+
+		grid[start.x][start.y] = i
+		grid[end.x][end.y]     = i
+
+		endpoints.append({"pos": start, "id": i})
+		endpoints.append({"pos": end,   "id": i})
+
+	return {"grid": grid, "colors": colors, "endpoints": endpoints}
+
+
+func _random_free_pos(cols: int, rows: int,
+		occupied_map: Array[Array], rng: RandomNumberGenerator) -> Vector2i:
+	for _attempt in 1000:
+		var pos := Vector2i(rng.randi_range(0, cols - 1), rng.randi_range(0, rows - 1))
+		if not (occupied_map[pos.x][pos.y] as bool):
+			return pos
+	return Vector2i(-1, -1)
+
+
+func _random_far_pos(cols: int, rows: int, start: Vector2i,
+		occupied_map: Array[Array], rng: RandomNumberGenerator) -> Vector2i:
+	for _attempt in 1000:
+		var pos := Vector2i(rng.randi_range(0, cols - 1), rng.randi_range(0, rows - 1))
+		if pos != start \
+				and not (occupied_map[pos.x][pos.y] as bool) \
+				and start.distance_to(pos) >= 2.0:
+			return pos
+	return Vector2i(-1, -1)
+
+
+func _build_astar_path(start: Vector2i, end: Vector2i,
+		occupied_map: Array[Array]) -> Array[Vector2i]:
+	var astar := AStarGrid2D.new()
+	astar.size          = _grid_size
+	astar.cell_size     = Vector2(1, 1)
 	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
-	
 	astar.update()
 
-	for x in range(size.x):
-		for y in range(size.y):
-			if occupied_map[x][y]:
-				astar.set_point_solid(Vector2i(x, y), true)
-			else:
-				astar.set_point_solid(Vector2i(x, y), false)
-				
+	for x in _grid_size.x:
+		for y in _grid_size.y:
+			astar.set_point_solid(Vector2i(x, y), occupied_map[x][y] as bool)
+
 	astar.set_point_solid(start, false)
-	astar.set_point_solid(end, false)
+	astar.set_point_solid(end,   false)
+
+	var raw := astar.get_id_path(start, end)
+	if raw.size() >= 2:
+		raw.pop_back()
+		raw.remove_at(0)
+	return raw
 
 
-	var path_array = astar.get_id_path(start, end)
-	
-	var path: Array[Vector2i] = []
-	for point in path_array:
-		path.append(point)
+# ============================================================
+#  TILE PLACEMENT
+# ============================================================
+func _place_tiles(endpoints: Array) -> void:
+	var cols := _grid_size.x
+	var rows := _grid_size.y
 
-	if path.size() >= 2:
-		path.pop_back()
-		path.remove_at(0)
-		
-	return path
-
-func place_tiles(grid: Array, colors: Dictionary, endpoints: Array) -> void:
-	var cols = grid.size()
-	var rows = grid[0].size()
-	var tile_w = tile.texture.get_size().x * tile.scale.x
-	var tile_h = tile.texture.get_size().y * tile.scale.y
-	
-	var endpoint_map = {}
+	var endpoint_set: Dictionary = {}
 	for ep in endpoints:
-		endpoint_map[ep.pos] = true
+		endpoint_set[(ep as Dictionary)["pos"]] = true
 
-	for x in range(cols):
-		for y in range(rows):
-			var id = grid[x][y]
-			var grid_pos = Vector2i(x, y)
-			var t = tile.duplicate() as Sprite2D
-			t.visible = true
-			t.position = field.position + Vector2(x * ((tile_w + tile_w) / 2), y * ((tile_h + tile_h) / 2))
-			
-			t.set_meta(&"Id", id)
+	for x in cols:
+		for y in rows:
+			var id: int = _grid[x][y]
+			var grid_pos := Vector2i(x, y)
+
+			var t := _tile_template.duplicate() as Sprite2D
+			t.visible  = true
+			t.position = _field_sprite.position + Vector2(x * _tile_size.x, y * _tile_size.y)
+
+			t.set_meta(&"Id",      id)
 			t.set_meta(&"GridPos", grid_pos)
-		
-			
-			var visual_node = t.get_child(0) as Sprite2D
-			
+
+			var visual := t.get_child(0) as Sprite2D
+
 			if id == 0:
-				visual_node.visible = false
+				visual.visible = false
 			else:
-				t.set_meta(&"Color", colors[id])
-				visual_node.visible = true
-				visual_node.modulate = colors[id]
-				
-				if endpoint_map.has(grid_pos):
-					t.set_meta(&"IsEndpoint", true)
-				else:
-					t.set_meta(&"IsEndpoint", false)
-					
-			grid_container.add_child(t)
+				var col: Color = _colors[id]
+				t.set_meta(&"Color",      col)
+				t.set_meta(&"IsEndpoint", endpoint_set.has(grid_pos))
+				visual.visible  = true
+				visual.modulate = col
+				_animate_tile(t, true)
 
-			if id != 0:
-				_animate_tile_draw(t, true)
+			_grid_root.add_child(t)
+			_tile_map[grid_pos] = t
 
-func _animate_tile_draw(node: CanvasItem, appear: bool) -> void:
-	var tween = create_tween()
+
+# ============================================================
+#  TILE ANIMATION
+# ============================================================
+func _animate_tile(node: CanvasItem, appear: bool) -> void:
+	var child := node.get_child(0) as CanvasItem
+	if not child:
+		return
+	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	
-	var final_alpha = 1.0 if appear else 1.0
-	var duration = 0.2
-	
-	tween.tween_property(node, "modulate:a", final_alpha, duration)
+	tween.tween_property(child, "modulate:a", 1.0 if appear else 0.0, 0.2)
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Если игра на паузе, не обрабатываем игровой ввод
-	if is_paused:
+
+# ============================================================
+#  COORDINATE HELPERS
+# ============================================================
+func _screen_to_grid(screen_pos: Vector2) -> Vector2i:
+	var local := to_local(screen_pos) - _field_sprite.position
+	return Vector2i(int(floor(local.x / _tile_size.x)), int(floor(local.y / _tile_size.y)))
+
+
+func _is_valid_pos(pos: Vector2i) -> bool:
+	return pos.x >= 0 and pos.y >= 0 and pos.x < _grid_size.x and pos.y < _grid_size.y
+
+
+func _get_tile(pos: Vector2i) -> Sprite2D:
+	return _tile_map.get(pos, null) as Sprite2D
+
+
+# ============================================================
+#  PATH MANAGEMENT
+# ============================================================
+func _clear_path(id: int) -> void:
+	if id == 0:
 		return
-		
-	if event is InputEventMouseButton or event is InputEventScreenTouch:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			var grid_pos = screen_to_grid(event.position)
-			
-			if not is_valid_grid_pos(grid_pos):
-				if is_drawing and not event.pressed:
-					stop_drawing_path(Vector2i(-1, -1))
-				return
-				
-			if event.pressed:
-				start_drawing_path(grid_pos)
-			else:
-				stop_drawing_path(grid_pos)
-	
-	if current_path_tiles.is_empty(): 
-		return
-	
-	var last_pos = current_path_tiles.back()
-	
-	var current_grid_pos = screen_to_grid(event.position)
-	
-	if current_grid_pos == last_pos:
-		return
+	_completed_ids.erase(id)
+	for x in _grid_size.x:
+		for y in _grid_size.y:
+			if (_grid[x][y] as int) != id:
+				continue
+			var t := _get_tile(Vector2i(x, y))
+			if t and not (t.get_meta(&"IsEndpoint", false) as bool):
+				_grid[x][y] = 0
+				(t.get_child(0) as CanvasItem).visible = false
+				_animate_tile(t, false)
 
-	var last_pos_f = Vector2(last_pos) 
-	var current_grid_pos_f = Vector2(current_grid_pos)
 
-	var dx = abs(current_grid_pos.x - last_pos.x)
-	var dy = abs(current_grid_pos.y - last_pos.y)
-	var steps = max(dx, dy)
-	
-	if steps > 0:
-		for i in range(1, steps + 1):
-			var t = float(i) / steps
-			
-			var interp_pos_float = last_pos_f.lerp(current_grid_pos_f, t) 
-			
-			var step_pos = Vector2i(round(interp_pos_float.x), round(interp_pos_float.y))
-			
-			if step_pos != current_path_tiles.back():
-				draw_path(step_pos)
-
-func screen_to_grid(screen_pos: Vector2) -> Vector2i:
-	var local_pos = to_local(screen_pos)
-	var relative_pos = local_pos - field.position
-	
-	var tile_W = tile.texture.get_size().x * tile.scale.x
-	var tile_H = tile.texture.get_size().y * tile.scale.y
-	
-	var x = floor((relative_pos.x / tile_W)) 
-	var y = floor((relative_pos.y / tile_H))
-	
-	return Vector2i(x, y)
-
-func is_valid_grid_pos(pos: Vector2i) -> bool:
-	return pos.x >= 0 and pos.y >= 0 and pos.x <= grid_size.x and pos.y <= grid_size.y
-
-func get_tile_at(pos: Vector2i) -> Sprite2D:
-	if not is_valid_grid_pos(pos):
-		return null
-		
-	for child in grid_container.get_children():
-		if child.get_meta(&"GridPos") == pos:
-			return child as Sprite2D
-			
-	return null
-
-func clear_path(id_to_clear: int) -> void:
-	if id_to_clear == 0:
-		return
-
-	var cols = grid_size.x
-	var rows = grid_size.y
-
-	for x in range(cols):
-		for y in range(rows):
-			var grid_pos = Vector2i(x, y)
-			
-			if _current_grid[x][y] == id_to_clear:
-				var tile_node = get_tile_at(grid_pos)
-				
-				if tile_node:
-					var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
-					
-					if not is_endpoint:
-						_current_grid[x][y] = 0
-						tile_node.get_child(0).visible = false
-						_animate_tile_draw(tile_node, false)
-
-func start_drawing_path(pos: Vector2i) -> void:
-	var tile_node = get_tile_at(pos)
-	if not tile_node:
-		return
-		
-	var id = tile_node.get_meta(&"Id")
-	var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
-
-	if id > 0 and is_endpoint:
-		
-		clear_path(id) 
-		
-		is_drawing = true
-		current_path_id = id
-		current_path_color = tile_node.get_meta(&"Color")
-		current_path_tiles.append(pos)
-
-func draw_path(pos: Vector2i) -> void:
-	if not is_drawing:
-		return
-		
-	if current_path_tiles.is_empty():
-		return
-		
-	var last_pos = current_path_tiles.back()
-	
-	if pos == last_pos: 
-		return
-	
-	if pos.distance_to(last_pos) > 1.0: 
-		return
-		
-	var tile_node = get_tile_at(pos)
-	if not tile_node:
-		return
-		
-	var target_id = tile_node.get_meta(&"Id")
-	var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
-	
-	var can_continue = not current_path_tiles.has(pos) and (
-		target_id == 0 or
-		(target_id == current_path_id and is_endpoint)
-	)
-
-	if can_continue:
-		current_path_tiles.append(pos)
-		
-		_animate_tile_draw(tile_node, true)
-		
-		if target_id == 0:
-			tile_node.get_child(0).visible = true 
-			tile_node.get_child(0).modulate = current_path_color
-			
-		tile_node.modulate = current_path_color * 0.7 
-		
-	elif current_path_tiles.size() > 1 and current_path_tiles[-2] == pos:
-		var removed_pos = current_path_tiles.pop_back()
-		var removed_tile = get_tile_at(removed_pos)
-	
-		if removed_tile:
-			var is_removed_endpoint = removed_tile.get_meta(&"IsEndpoint", false)
-			
-			if not is_removed_endpoint:
-				_animate_tile_draw(removed_tile, false)
-			else:
-				removed_tile.get_child(0).visible = false 
-				
-
-func stop_drawing_path(pos: Vector2i) -> void:
-	if not is_drawing:
-		return
-		
-	is_drawing = false
-	
-	var tile_node = get_tile_at(pos)
-	
-	if not tile_node: 
-		_reset_path_visualization()
-		return
-	
-	var target_id = tile_node.get_meta(&"Id")
-	var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
-	
-	if target_id == current_path_id and is_endpoint and current_path_tiles.size() > 1:
-		
-		print("Path for ID %d successfully laid!" % current_path_id)
-		
-		for path_pos in current_path_tiles:
-			var final_tile = get_tile_at(path_pos)
-			
-			if final_tile:
-				if not final_tile.get_meta(&"IsEndpoint", false):
-					_current_grid[path_pos.x][path_pos.y] = current_path_id
-				
-				final_tile.get_child(0).visible = true
-				final_tile.get_child(0).modulate = current_path_color
-		
-	else:
-		print("Path for ID %d reset." % current_path_id)
-		_reset_path_visualization()
-		
-	current_path_tiles.clear()
-	current_path_id = 0
-
-func _reset_path_visualization() -> void:
-	for pos in current_path_tiles:
-		var tile_node = get_tile_at(pos)
-		
-		if not tile_node: continue
-		
-		var is_endpoint = tile_node.get_meta(&"IsEndpoint", false)
-		
-		if not is_endpoint:
-			tile_node.get_child(0).visible = false
-			_animate_tile_draw(tile_node, false) 
+func _reset_path_visual() -> void:
+	for pos: Vector2i in _path_tiles:
+		var t := _get_tile(pos)
+		if not t:
+			continue
+		var visual := t.get_child(0) as CanvasItem
+		if t.get_meta(&"IsEndpoint", false) as bool:
+			visual.modulate = t.get_meta(&"Color") as Color
+			visual.visible  = true
 		else:
-			tile_node.get_child(0).modulate = tile_node.get_meta(&"Color")
-			tile_node.get_child(0).visible = true
-			
-	clear_path(current_path_id)
+			visual.visible = false
+			_animate_tile(t, false)
+	_clear_path(_path_id)
+
+
+func _start_drawing(pos: Vector2i) -> void:
+	var t := _get_tile(pos)
+	if not t:
+		return
+	var id: int = t.get_meta(&"Id")
+	if id <= 0 or not (t.get_meta(&"IsEndpoint", false) as bool):
+		return
+
+	_clear_path(id)
+	_drawing    = true
+	_path_id    = id
+	_path_color = t.get_meta(&"Color")
+	_path_tiles.append(pos)
+
+
+func _extend_path(pos: Vector2i) -> void:
+	if not _drawing or _path_tiles.is_empty():
+		return
+
+	var last: Vector2i = _path_tiles.back()
+	if pos == last:
+		return
+	if absi(pos.x - last.x) + absi(pos.y - last.y) != 1:
+		return
+
+	var t := _get_tile(pos)
+	if not t:
+		return
+
+	var static_id: int = t.get_meta(&"Id")          # колір ендпоінта (0 для звичайної клітинки)
+	var is_endpoint: bool = t.get_meta(&"IsEndpoint", false)
+	var grid_id: int = _grid[pos.x][pos.y]           # поточна зайнятість (прокладені шляхи)
+
+	# ── Backtrack ────────────────────────────────────────────
+	if _path_tiles.size() > 1 and (_path_tiles[-2] as Vector2i) == pos:
+		var removed_pos: Vector2i = _path_tiles.pop_back()
+		var removed_tile := _get_tile(removed_pos)
+		if removed_tile and not (removed_tile.get_meta(&"IsEndpoint", false) as bool):
+			_grid[removed_pos.x][removed_pos.y] = 0
+			(removed_tile.get_child(0) as CanvasItem).visible = false
+			_animate_tile(removed_tile, false)
+		return
+
+	# ── Advance ──────────────────────────────────────────────
+	# Дозволено йти лише на:
+	#   • власний ендпоінт (того ж кольору), або
+	#   • справді порожню клітинку (не зайняту іншим прокладеним шляхом).
+	var allowed: bool
+	if is_endpoint:
+		allowed = static_id == _path_id
+	else:
+		allowed = grid_id == 0
+
+	if _path_tiles.has(pos) or not allowed:
+		return
+
+	# одразу позначаємо клітинку зайнятою цим шляхом,
+	# щоб інші шляхи не могли пройти крізь неї
+	if not is_endpoint:
+		_grid[pos.x][pos.y] = _path_id
+
+	_path_tiles.append(pos)
+	var visual := t.get_child(0) as CanvasItem
+	visual.visible  = true
+	visual.modulate = _path_color * 0.85
+	_animate_tile(t, true)
+
+
+func _stop_drawing(pos: Vector2i) -> void:
+	if not _drawing:
+		return
+	_drawing = false
+
+	var t := _get_tile(pos)
+	if not t:
+		_reset_path_visual()
+		_path_tiles.clear()
+		_path_id = 0
+		return
+
+	var target_id: int = t.get_meta(&"Id")
+	var is_endpoint: bool = t.get_meta(&"IsEndpoint", false)
+	var success := target_id == _path_id and is_endpoint and _path_tiles.size() > 1
+
+	if success:
+		for p: Vector2i in _path_tiles:
+			var ft := _get_tile(p)
+			if not ft:
+				continue
+			if not (ft.get_meta(&"IsEndpoint", false) as bool):
+				_grid[p.x][p.y] = _path_id
+			var ft_visual := ft.get_child(0) as CanvasItem
+			ft_visual.visible  = true
+			ft_visual.modulate = _path_color
+		_completed_ids[_path_id] = true
+		_check_win()
+	else:
+		_reset_path_visual()
+
+	_path_tiles.clear()
+	_path_id = 0
+
+
+# ============================================================
+#  WIN
+# ============================================================
+func _check_win() -> void:
+	# Перемога = усі пари з'єднані (заповнювати все поле не потрібно).
+	if _completed_ids.size() >= _pair_count and _pair_count > 0:
+		_on_win()
+
+
+func _on_win() -> void:
+	if _won:
+		return
+	_won = true
+	var label := Label.new()
+	label.text = "Рівень пройдено!"
+	label.add_theme_font_size_override("font_size", 48)
+	label.set_anchors_preset(Control.PRESET_CENTER)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.process_mode = Node.PROCESS_MODE_ALWAYS
+	_pause_layer.add_child(label)
+
+	if embedded:
+		await get_tree().create_timer(1.5).timeout
+		closed.emit()
+
+
+# ============================================================
+#  INPUT
+# ============================================================
+func _unhandled_input(event: InputEvent) -> void:
+	if _paused or _won:
+		return
+
+	# ── Касание / кнопка мыши ─────────────────────────────────
+	if event is InputEventMouseButton or event is InputEventScreenTouch:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			var gp := _screen_to_grid(mb.position)
+			if not _is_valid_pos(gp):
+				if _drawing and not mb.pressed:
+					_stop_drawing(Vector2i(-1, -1))
+				return
+			if mb.pressed:
+				_start_drawing(gp)
+			else:
+				_stop_drawing(gp)
+			return
+
+	# ── Движение (перетаскивание) ─────────────────────────────
+	if not _drawing or _path_tiles.is_empty():
+		return
+
+	var motion_pos: Vector2
+	if event is InputEventMouseMotion:
+		motion_pos = (event as InputEventMouseMotion).position
+	elif event is InputEventScreenDrag:
+		motion_pos = (event as InputEventScreenDrag).position
+	else:
+		return
+
+	var current_gp := _screen_to_grid(motion_pos)
+	var last_gp: Vector2i = _path_tiles.back()
+	if current_gp == last_gp:
+		return
+
+	var steps := maxi(absi(current_gp.x - last_gp.x), absi(current_gp.y - last_gp.y))
+	for i in range(1, steps + 1):
+		var t_f := float(i) / float(steps)
+		var interp := Vector2(last_gp).lerp(Vector2(current_gp), t_f)
+		var step_gp := Vector2i(roundi(interp.x), roundi(interp.y))
+		if step_gp != (_path_tiles.back() as Vector2i):
+			_extend_path(step_gp)

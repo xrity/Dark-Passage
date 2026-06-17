@@ -1,13 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://dxd3gg8gsguki"]
+[gd_scene format=3 uid="uid://dxd3gg8gsguki"]
 
 [ext_resource type="Script" uid="uid://b8g2wgvo5i2et" path="res://map test/map.gd" id="1_aab8c"]
+[ext_resource type="PackedScene" uid="uid://gvolnhlu6fsa" path="res://scenes/wires_game/WiresGame.tscn" id="3_1vgeh"]
 [ext_resource type="PackedScene" uid="uid://br5o82sudqs5k" path="res://player/player.tscn" id="3_pkfr3"]
 
-[node name="Map" type="Node2D"]
+[node name="Map" type="Node2D" unique_id=2096490350]
 texture_filter = 1
 script = ExtResource("1_aab8c")
+wires_game_scene = ExtResource("3_1vgeh")
 
-[node name="player" parent="." instance=ExtResource("3_pkfr3")]
+[node name="player" parent="." unique_id=1013195255 instance=ExtResource("3_pkfr3")]
 z_index = 3
 position = Vector2(120, 120)
 scale = Vector2(0.38, 0.38)

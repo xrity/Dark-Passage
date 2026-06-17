@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://cros1wv5a5lg7" path="res://assets/MainMenu/exit.png" id="4_qoqlk"]
 [ext_resource type="Texture2D" uid="uid://edoqujjeqmea" path="res://assets/MainMenu/Settings.png" id="5_iwfq2"]
 [ext_resource type="Texture2D" uid="uid://ld3gapeoktoj" path="res://assets/MainMenu/game_name.png" id="8_fimr5"]
+[ext_resource type="PackedScene" uid="uid://dxd3gg8gsguki" path="res://map test/map.tscn" id="9_6k0m2"]
 [ext_resource type="AudioStream" uid="uid://bm6mf4ju6w7tj" path="res://assets/music/menuclickbutton.mp3" id="10_qq55g"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_e2xy7"]
@@ -37,6 +38,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_e2xy7")
+maze_scene = ExtResource("9_6k0m2")
 
 [node name="Background" type="TextureRect" parent="." unique_id=1859788930]
 texture_filter = 3

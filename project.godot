@@ -22,6 +22,8 @@ config/icon="uid://cnwfkhfiilasg"
 [autoload]
 
 DiscordRPCLoader="*res://addons/discord-rpc-gd/nodes/discord_autoload.gd"
+Settings="*uid://dqa8ncj1igupb"
+DialogueBox="*uid://tp5nvyw8volp"
 
 [display]
 

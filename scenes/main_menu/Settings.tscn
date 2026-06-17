@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bnx71t2uxh6kt"]
+[gd_scene format=3 uid="uid://bnx71t2uxh6kt"]
 
 [ext_resource type="Script" uid="uid://c22vdk01a1thx" path="res://scenes/main_menu/settings.gd" id="1_i0kgl"]
 [ext_resource type="Texture2D" uid="uid://cj50ps1yjvivg" path="res://assets/MainMenu/settings/background.png" id="2_o21gg"]
@@ -43,7 +43,7 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[node name="Settings" type="Control"]
+[node name="Settings" type="Control" unique_id=515074584]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -52,7 +52,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_i0kgl")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=40509246]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -62,7 +62,7 @@ grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_o21gg")
 metadata/_edit_use_anchors_ = true
 
-[node name="SettingsBackground" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=834081897]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
@@ -80,23 +80,23 @@ pivot_offset = Vector2(50, 50)
 texture = ExtResource("2_o21gg")
 stretch_mode = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SettingsBackground"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Background" unique_id=1900925692]
 layout_mode = 0
 offset_left = 27.0
 offset_top = 32.0
 offset_right = 467.0
-offset_bottom = 472.0
+offset_bottom = 452.0
 pivot_offset = Vector2(240, 240)
 
-[node name="Label" type="Label" parent="SettingsBackground/VBoxContainer"]
+[node name="MusicVolumeText" type="Label" parent="Background/VBoxContainer" unique_id=350704372]
 z_index = 4
 texture_filter = 1
 layout_mode = 2
 theme_override_font_sizes/font_size = 23
 theme_override_styles/normal = SubResource("StyleBoxFlat_6jx7q")
-text = "Game Volume"
+text = "Music Volume"
 
-[node name="HSlider" type="HSlider" parent="SettingsBackground/VBoxContainer"]
+[node name="MusicSlider" type="HSlider" parent="Background/VBoxContainer" unique_id=388701428]
 layout_mode = 2
 theme_override_icons/grabber = ExtResource("3_6jx7q")
 theme_override_styles/slider = SubResource("StyleBoxFlat_kstpm")
@@ -107,29 +107,88 @@ step = 0.05
 value = 0.5
 scrollable = false
 
-[node name="DifficultyButton" type="OptionButton" parent="SettingsBackground/VBoxContainer"]
+[node name="SFXVolumeText" type="Label" parent="Background/VBoxContainer" unique_id=561968251]
+z_index = 4
+texture_filter = 1
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxFlat_6jx7q")
+text = "SFX Volume"
+
+[node name="SFXSlider" type="HSlider" parent="Background/VBoxContainer" unique_id=195887148]
+layout_mode = 2
+theme_override_icons/grabber = ExtResource("3_6jx7q")
+theme_override_styles/slider = SubResource("StyleBoxFlat_kstpm")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_788pq")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_8vkoj")
+max_value = 1.0
+step = 0.05
+value = 0.5
+scrollable = false
+
+[node name="DifficultyText" type="Label" parent="Background/VBoxContainer" unique_id=1305990898]
+z_index = 4
+texture_filter = 1
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxFlat_6jx7q")
+text = "Difficultty"
+
+[node name="DifficultyButton" type="OptionButton" parent="Background/VBoxContainer" unique_id=1843908597]
 layout_mode = 2
 selected = 1
 item_count = 3
 popup/item_0/text = "easy"
-popup/item_0/id = 1
+popup/item_0/id = 0
 popup/item_1/text = "normal"
 popup/item_1/id = 1
 popup/item_2/text = "hard"
 popup/item_2/id = 2
 
-[node name="CenterContainer" parent="." instance=ExtResource("3_kstpm")]
+[node name="GraphicsLevelText" type="Label" parent="Background/VBoxContainer" unique_id=1552811101]
+z_index = 4
+texture_filter = 1
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxFlat_6jx7q")
+text = "Graphics"
+
+[node name="GraphicsButton" type="OptionButton" parent="Background/VBoxContainer" unique_id=335373005]
+layout_mode = 2
+selected = 1
+item_count = 3
+popup/item_0/text = "low"
+popup/item_0/id = 0
+popup/item_1/text = "medium"
+popup/item_1/id = 1
+popup/item_2/text = "hight"
+popup/item_2/id = 2
+
+[node name="ControlsLabel" type="RichTextLabel" parent="Background/VBoxContainer" unique_id=2008200005]
+clip_contents = false
+custom_minimum_size = Vector2(50, 95)
+layout_mode = 2
+bbcode_enabled = true
+text = "Controls"
+fit_content = true
+scroll_following = true
+scroll_following_visible_characters = true
+
+[node name="ResetButton" type="Button" parent="Background/VBoxContainer" unique_id=1862043212]
+layout_mode = 2
+text = "Reset"
+
+[node name="BackButton" parent="." unique_id=2101066273 instance=ExtResource("3_kstpm")]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.8263889
-anchor_top = 0.845679
-anchor_right = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
-grow_horizontal = 0
-scale = Vector2(1, 1)
+anchor_left = 0.515625
+anchor_top = 0.046296295
+anchor_right = 0.515625
+anchor_bottom = 0.046296295
+offset_left = 353.0
+offset_top = 513.0
+offset_right = 793.0
+offset_bottom = 613.0
 metadata/_edit_use_anchors_ = true
 
-[connection signal="item_selected" from="SettingsBackground/VBoxContainer/DifficultyButton" to="." method="_on_difficulty_button_item_selected"]
+[connection signal="item_selected" from="Background/VBoxContainer/DifficultyButton" to="." method="_on_difficulty_button_item_selected"]
