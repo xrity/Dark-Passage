@@ -58,6 +58,10 @@ const DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 ## Клітинка, де з'явиться портал.
 @export var trigger_cell: Vector2i = Vector2i(30, 14)
 
+## Тестовий персонаж (червоний квадрат, діалог по F).
+@export var spawn_test_npc: bool = true
+@export var test_npc_cell: Vector2i = Vector2i(3, 1)
+
 # _open[x][y] = [bool верх, право, низ, лево]
 var _open: Array = []
 var _trigger: Node2D
@@ -72,6 +76,7 @@ func _ready() -> void:
 	if add_walls:
 		_build_walls()
 	_spawn_trigger_at(_clamp_cell(trigger_cell))
+	_spawn_test_npc()
 
 
 # ============================================================
@@ -207,6 +212,15 @@ func _random_cell() -> Vector2i:
 		if c != player_cell and c != _trigger_cell_current:
 			return c
 	return Vector2i(randi() % COLS, randi() % ROWS)
+
+
+func _spawn_test_npc() -> void:
+	if not spawn_test_npc:
+		return
+	var npc := TestNPC.new()
+	npc.cell_size = float(CELL_SIZE)
+	add_child(npc)
+	npc.position = _cell_center(_clamp_cell(test_npc_cell))
 
 
 # ============================================================

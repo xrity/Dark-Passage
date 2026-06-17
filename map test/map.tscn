@@ -8,6 +8,7 @@
 texture_filter = 1
 script = ExtResource("1_aab8c")
 wires_game_scene = ExtResource("3_1vgeh")
+test_npc_cell = Vector2i(1, 1)
 
 [node name="player" parent="." unique_id=1013195255 instance=ExtResource("3_pkfr3")]
 z_index = 3

@@ -85,7 +85,7 @@ layout_mode = 0
 offset_left = 27.0
 offset_top = 32.0
 offset_right = 467.0
-offset_bottom = 452.0
+offset_bottom = 480.0
 pivot_offset = Vector2(240, 240)
 
 [node name="MusicVolumeText" type="Label" parent="Background/VBoxContainer" unique_id=350704372]
@@ -165,12 +165,10 @@ popup/item_2/text = "hight"
 popup/item_2/id = 2
 
 [node name="ControlsLabel" type="RichTextLabel" parent="Background/VBoxContainer" unique_id=2008200005]
-clip_contents = false
 custom_minimum_size = Vector2(50, 95)
 layout_mode = 2
 bbcode_enabled = true
 text = "Controls"
-fit_content = true
 scroll_following = true
 scroll_following_visible_characters = true
 
